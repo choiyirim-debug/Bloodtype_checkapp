@@ -1,7 +1,8 @@
-# Bloodtype.py
+import streamlit as st
 
-# [리스트] 혈액형별 수혈 받을 수 있는 혈액형 데이터
-# 구조: [수혈받는 혈액형, [[피를 주는 혈액형, 수혈 종류], ...]]
+st.set_page_config(page_title="헌혈 가능 여부 & 수혈 표", page_icon="🩸", layout="centered")
+
+# 1. [리스트] 혈액형별 수혈 받을 수 있는 혈액형 데이터
 transfusion_list = [
     ["A형", [["A형", "🟢 다량 수혈"], ["O형", "🟡 소량 수혈"]]],
     ["B형", [["B형", "🟢 다량 수혈"], ["O형", "🟡 소량 수혈"]]],
@@ -9,7 +10,7 @@ transfusion_list = [
     ["AB형", [["AB형", "🟢 다량 수혈"], ["A형", "🟡 소량 수혈"], ["B형", "🟡 소량 수혈"], ["O형", "🟡 소량 수혈"]]]
 ]
 
-# [함수] 성별, 나이, 몸무게를 입력받아 헌혈 가능 여부와 안내 메시지를 리턴
+# 2. [함수] 성별, 나이, 몸무게를 입력받아 헌혈 가능 여부와 안내 메시지를 리턴
 def check_donation(gender, age, weight):
     # [조건문] 만 16~69세, 남성 50kg 이상, 여성 45kg 이상 조건 확인
     if age < 16 or age > 69:
@@ -19,18 +20,14 @@ def check_donation(gender, age, weight):
     elif gender == "여성" and weight < 45:
         return "체중제한", "🚨 헌혈 경고: 여성은 몸무게가 45kg 이상이어야 헌혈할 수 있습니다."
     else:
-        return "가능", "💖 헌혈 권장: 모든 기준을 충족했습니다! 따뜻한 생명 나눔, 헌혈에 참여해 주세요!"# app.py
-import streamlit as st
-import Bloodtype  # Bloodtype.py 라이브러리 불러오기
+        return "가능", "💖 헌혈 권장: 모든 기준을 충족했습니다! 따뜻한 생명 나눔, 헌혈에 참여해 주세요!"
 
-st.set_page_config(page_title="헌혈 가능 여부 & 수혈 표", page_icon="🩸", layout="centered")
-
+# --- 웹앱 화면 구성 ---
 st.title("🩸 헌혈 자가진단 & 혈액형별 수혈 가이드")
 st.write("성별, 나이, 몸무게와 혈액형을 입력하고 버튼을 눌러 결과를 확인하세요.")
 
 st.divider()
 
-# 사용자 입력 영역
 col1, col2 = st.columns(2)
 with col1:
     gender = st.radio("성별을 선택하세요", ["남성", "여성"], horizontal=True)
@@ -40,14 +37,13 @@ with col2:
     weight = st.number_input("몸무게 (kg)", min_value=10.0, max_value=200.0, value=55.0, step=0.5)
     selected_blood = st.selectbox("본인의 혈액형을 선택하세요", ["A형", "B형", "O형", "AB형"])
 
-# 버튼 클릭 시 실행
 if st.button("헌혈 가능 여부 및 수혈 표 확인하기 💉", use_container_width=True):
     st.divider()
 
-    # Bloodtype 라이브러리의 함수(def) 호출
-    status, message = Bloodtype.check_donation(gender, age, weight)
+    # 함수 호출
+    status, message = check_donation(gender, age, weight)
 
-    # [조건문 - if-elif-else] 헌혈 가능 시 권장 메시지, 불가능 시 경고 문구 출력
+    # 3. [조건문 - if-elif-else] 헌혈 가능 시 권장 메시지, 불가능 시 경고 문구 출력
     st.subheader("1️⃣ 헌혈 가능 여부 판정 결과")
     if status == "가능":
         st.success(message)
@@ -57,7 +53,7 @@ if st.button("헌혈 가능 여부 및 수혈 표 확인하기 💉", use_contai
     else:
         st.warning(message)
 
-    # [반복문 - for] 리스트 데이터를 순회하며 '피 넘겨주는 귀여운 그림 표' 생성
+    # 4. [반복문 - for] 리스트 데이터를 순회하며 '피 넘겨주는 귀여운 그림 표' 생성
     st.subheader(f"2️⃣ '{selected_blood}'이 수혈 받을 수 있는 혈액형 표")
 
     table_html = """
@@ -73,32 +69,27 @@ if st.button("헌혈 가능 여부 및 수혈 표 확인하기 💉", use_contai
 <tbody>
 """
 
-    for item in Bloodtype.transfusion_list:
+    for item in transfusion_list:
         if item[0] == selected_blood:
-            donor_list = item[1]  # [[주는 혈액형, 수혈 종류], ...]
+            donor_list = item[1]
             for donor_info in donor_list:
                 donor = donor_info[0]
                 t_type = donor_info[1]
 
-                # 다량 수혈(초록) / 소량 수혈(노랑) 화살표 색상 지정
                 if "다량" in t_type:
                     arrow_color = "#2b8a3e"
                 else:
                     arrow_color = "#f08c00"
 
-                # 귀여운 물방울 캐릭터가 피를 건네주는 SVG 일러스트
                 cute_svg = f"""
 <svg width="170" height="54" viewBox="0 0 170 54" xmlns="http://www.w3.org/2000/svg">
-  <!-- 주는 쪽 귀여운 혈액 방울 -->
   <path d="M28 8 C28 8 14 25 14 35 A14 14 0 0 0 42 35 C42 25 28 8 28 8 Z" fill="#ff4d4f"/>
   <circle cx="24" cy="33" r="1.8" fill="#ffffff"/>
   <circle cx="32" cy="33" r="1.8" fill="#ffffff"/>
   <path d="M25 38 Q28 41 31 38" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <!-- 건네주는 화살표 & 하트 -->
   <line x1="50" y1="30" x2="112" y2="30" stroke="{arrow_color}" stroke-width="4" stroke-linecap="round"/>
   <polygon points="112,24 123,30 112,36" fill="{arrow_color}"/>
   <text x="78" y="21" font-size="14">💖</text>
-  <!-- 받는 쪽 귀여운 캐릭터 -->
   <circle cx="142" cy="31" r="15" fill="#ffd8a8" stroke="#ffa94d" stroke-width="2"/>
   <circle cx="137" cy="29" r="1.8" fill="#333333"/>
   <circle cx="147" cy="29" r="1.8" fill="#333333"/>
